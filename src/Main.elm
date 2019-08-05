@@ -108,30 +108,37 @@ nextState model coord =
             case cellState of
                 Live -> sum + 1
                 Dead -> sum
+        liveNeighbors =
+            Array.foldr accumulator 0 (neighbors model coord)
     in
-        let
-            liveNeighbors = Array.foldr accumulator 0 (neighbors model coord)
-        in
-            case (getState model coord) of
-                Just Live ->
-                    if liveNeighbors < 2 || liveNeighbors > 3 then
-                        Ok Dead
-                    else
-                        Ok Live
-                Just Dead ->
-                    if liveNeighbors == 3 then
-                        Ok Live
-                    else
-                        Ok Dead
-                _ ->
-                    Err "Coordinate out of bounds"
+        case (getState model coord) of
+            Just Live ->
+                if liveNeighbors < 2 || liveNeighbors > 3 then
+                    Ok Dead
+                else
+                    Ok Live
+            Just Dead ->
+                if liveNeighbors == 3 then
+                    Ok Live
+                else
+                    Ok Dead
+            _ ->
+                Err "Coordinate out of bounds"
 
 {-| DOCS MISSING -}
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
     case msg of
         Tick ->
-            Debug.todo "Tick message"
+            let
+                fxn cellData =
+                    case nextState model cellData.coord of
+                        Ok newState -> { cellData | state = newState }
+                        _ -> cellData
+                newModel =
+                    { model | vals = Array.map (Array.map fxn) model.vals }
+            in
+                (newModel, Cmd.none)
         _ ->
             (model, Cmd.none)
 
