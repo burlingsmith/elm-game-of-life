@@ -4,11 +4,18 @@ module Main exposing (main)
 import Array exposing (Array)
 import Browser
 import Html exposing (Html)
+import Random exposing (Generator)
 import Time
 
 ------------------------------------------------------------------------------
 -- Configuration
 ------------------------------------------------------------------------------
+
+{-| DOCS MISSING -}
+fieldCols = 20
+
+{-| DOCS MISSING -}
+fieldRows = 10
 
 {-| DOCS MISSING -}
 tickInterval = 1000
@@ -30,10 +37,13 @@ type alias CellData =
     }
 
 {-| DOCS MISSING -}
+type alias CellGrid = Array (Array CellData)
+
+{-| DOCS MISSING -}
 type alias Model =
     { cols : Int
     , rows : Int
-    , vals : Array (Array CellData)
+    , vals : CellGrid
     }
 
 {-| DOCS MISSING -}
@@ -57,12 +67,33 @@ getState model coord =
         Just cellData -> Just cellData.state
         _ -> Nothing
 
+{-| DOCS MISSING -}
+isDead : Model -> Bool
+isDead model =
+    let
+        accumulator val acc =
+            case val.state of
+                Dead -> True && acc
+                Live -> False
+        singleFold array =
+            Array.foldr accumulator True array
+    in
+        Array.foldr (\array acc -> acc && (singleFold array)) True model.vals
+
+{-| DOCS MISSING -}
+genSeed : Int -> Int -> Generator CellGrid
+genSeed cols rows =
+    Debug.todo "genSeed"
+
 ------------------------------------------------------------------------------
 -- Update
 ------------------------------------------------------------------------------
 
 {-| DOCS MISSING -}
-type Msg = Tick | Nil
+type Msg
+    = NewSim CellGrid
+    | Tick
+    | Nil
 
 {-| Wrap coordinates around the field -}
 wrap : Model -> Coord -> Coord
@@ -130,13 +161,26 @@ update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
     case msg of
         Tick ->
+            if isDead model then
+                let
+                    seed =
+                        (genSeed model.cols model.rows)
+                        |> Random.generate NewSim
+                in
+                    (model, seed)
+            else
+                let
+                    fxn cellData =
+                        case nextState model cellData.coord of
+                            Ok newState -> { cellData | state = newState }
+                            _ -> cellData
+                    newModel =
+                        { model | vals = Array.map (Array.map fxn) model.vals }
+                in
+                    (newModel, Cmd.none)
+        NewSim seed ->
             let
-                fxn cellData =
-                    case nextState model cellData.coord of
-                        Ok newState -> { cellData | state = newState }
-                        _ -> cellData
-                newModel =
-                    { model | vals = Array.map (Array.map fxn) model.vals }
+                newModel = { model | vals = seed }
             in
                 (newModel, Cmd.none)
         _ ->
