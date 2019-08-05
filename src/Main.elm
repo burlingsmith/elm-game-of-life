@@ -13,7 +13,7 @@ import Html exposing (Html)
 type alias Coord = (Int, Int)
 
 {-| DOCS MISSING -}
-type CellState = Alive | Dead
+type CellState = Live | Dead
 
 {-| DOCS MISSING -}
 type alias Model =
@@ -64,6 +64,17 @@ wrap model (rawCol, rawRow) =
 neighbors : Model -> Coord -> Array CellState
 neighbors model (col, row) =
     Debug.todo "neighbors()"
+
+{-| Calculate the number of living neighbors to a cell -}
+liveNeighbors : Model -> Coord -> Int
+liveNeighbors model coord =
+    let
+        accumulator cellState sum =
+            case cellState of
+                Live -> sum + 1
+                Dead -> sum
+    in
+        Array.foldr accumulator 0 (neighbors model coord)
 
 {-| Determine the next state of a cell based upon its neighbors -}
 nextState : CellState -> Array CellState -> CellState
