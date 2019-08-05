@@ -10,6 +10,7 @@ import Time
 -- Configuration
 ------------------------------------------------------------------------------
 
+{-| DOCS MISSING -}
 tickInterval = 1000
 
 ------------------------------------------------------------------------------
@@ -20,13 +21,19 @@ tickInterval = 1000
 type alias Coord = (Int, Int)
 
 {-| DOCS MISSING -}
-type CellState = Live | Dead
+type CellState = Dead | Live
+
+{-| DOCS MISSING -}
+type alias CellData =
+    { state : CellState
+    , coord : Coord
+    }
 
 {-| DOCS MISSING -}
 type alias Model =
     { cols : Int
     , rows : Int
-    , vals : Array (Array CellState)
+    , vals : Array (Array CellData)
     }
 
 {-| DOCS MISSING -}
@@ -35,7 +42,7 @@ initModel =
     Debug.todo "initModel()"  -- randomize
 
 {-| DOCS MISSING -}
-get : Model -> Coord -> Maybe CellState
+get : Model -> Coord -> Maybe CellData
 get model (col, row) =
     case Array.get col model.vals of
         Just colVals ->
@@ -43,19 +50,19 @@ get model (col, row) =
         _ ->
             Nothing
 
+{-| DOCS MISSING -}
+getState : Model -> Coord -> Maybe CellState
+getState model coord =
+    case get model coord of
+        Just cellData -> Just cellData.state
+        _ -> Nothing
+
 ------------------------------------------------------------------------------
--- Controller
+-- Update
 ------------------------------------------------------------------------------
 
 {-| DOCS MISSING -}
 type Msg = Tick | Nil
-
-{-| DOCS MISSING -}
-subscriptions : Model -> Sub Msg
-subscriptions model =
-    Sub.batch
-        [ Time.every tickInterval (\_ -> Tick)
-        ]
 
 {-| Wrap coordinates around the field -}
 wrap : Model -> Coord -> Coord
@@ -87,13 +94,13 @@ neighbors model (col, row) =
             , (1, 0), (-1, 1), (0, 1), (1, 1)
             ]
         fxn (c, r) =
-            case get model (wrap model (col + c, row + r)) of
+            case getState model (wrap model (col + c, row + r)) of
                 Just cellState -> cellState
                 _ -> Dead
     in
         Array.map fxn (Array.fromList offsets)
 
-{-| Determine the state of a cell for the next cycle -}
+{-| Determine the next state of a cell -}
 nextState : Model -> Coord -> Result String CellState
 nextState model coord =
     let
@@ -105,7 +112,7 @@ nextState model coord =
         let
             liveNeighbors = Array.foldr accumulator 0 (neighbors model coord)
         in
-            case (get model coord) of
+            case (getState model coord) of
                 Just Live ->
                     if liveNeighbors < 2 || liveNeighbors > 3 then
                         Ok Dead
@@ -127,6 +134,17 @@ update msg model =
             Debug.todo "Tick message"
         _ ->
             (model, Cmd.none)
+
+------------------------------------------------------------------------------
+-- Subscriptions
+------------------------------------------------------------------------------
+
+{-| DOCS MISSING -}
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Sub.batch
+        [ Time.every tickInterval (\_ -> Tick)
+        ]
 
 ------------------------------------------------------------------------------
 -- View
