@@ -18,6 +18,12 @@ fieldCols = 20
 fieldRows = 10
 
 {-| DOCS MISSING -}
+liveP = 15
+
+{-| DOCS MISSING -}
+deadP = 15
+
+{-| DOCS MISSING -}
 tickInterval = 1000
 
 ------------------------------------------------------------------------------
@@ -50,21 +56,24 @@ type alias Model =
 initModel : Model
 initModel =
     let
-        deadCell cIndex rIndex =
-            { state = Dead
-            , coord = (cIndex, rIndex)
-            }
-        stateArray =
+        unindexed =
             Array.repeat fieldCols (Array.repeat fieldRows Dead)
-        dataRow cIndex column =
-            Array.indexedMap (\rIndex _ -> deadCell cIndex rIndex) column
-        dataArray =
-            Array.indexedMap (\i c -> dataRow i c) stateArray
+        rowIndex cInd column =
+            Array.indexedMap (cell cInd) column
+        indexed =
+            Array.indexedMap rowIndex unindexed
     in
         { cols = fieldCols
         , rows = fieldRows
-        , vals = dataArray
+        , vals = indexed
         }
+
+{-| DOCS MISSING -}
+cell : Int -> Int -> CellState -> CellData
+cell col row state =
+    { coord = (col, row)
+    , state = state
+    }
 
 {-| DOCS MISSING -}
 get : Model -> Coord -> Maybe CellData
@@ -96,9 +105,33 @@ isDead model =
         Array.foldr (\array acc -> acc && (singleFold array)) True model.vals
 
 {-| DOCS MISSING -}
-genSeed : Int -> Int -> Generator CellGrid
-genSeed cols rows =
-    Debug.todo "genSeed"
+seedGen : Generator (List CellState)
+seedGen =
+    let
+        listLen = fieldCols * fieldRows
+        rWeight = Random.weighted (liveP, Live) [ (deadP, Dead) ]
+    in
+        Random.list listLen rWeight
+
+{-| DOCS MISSING -}
+gridFromSeed : List CellState -> CellGrid
+gridFromSeed ls =
+    let
+        helper n remList =
+            if n > 0 then
+                let
+                    taken = Array.fromList (List.take fieldRows remList)
+                    left = List.drop fieldRows remList
+                in
+                    taken::(helper (n - 1) left)
+            else
+                []
+        unindexed =
+            Array.fromList (helper fieldCols ls)
+        rowIndex cInd column =
+            Array.indexedMap (cell cInd) column
+    in
+        Array.indexedMap rowIndex unindexed
 
 ------------------------------------------------------------------------------
 -- Update
@@ -106,7 +139,7 @@ genSeed cols rows =
 
 {-| DOCS MISSING -}
 type Msg
-    = NewSim CellGrid
+    = NewSim (List CellState)
     | Tick
     | Nil
 
@@ -178,9 +211,7 @@ update msg model =
         Tick ->
             if isDead model then
                 let
-                    seed =
-                        (genSeed model.cols model.rows)
-                        |> Random.generate NewSim
+                    seed = Random.generate NewSim seedGen
                 in
                     (model, seed)
             else
@@ -195,7 +226,7 @@ update msg model =
                     (newModel, Cmd.none)
         NewSim seed ->
             let
-                newModel = { model | vals = seed }
+                newModel = { model | vals = gridFromSeed seed }
             in
                 (newModel, Cmd.none)
         _ ->
