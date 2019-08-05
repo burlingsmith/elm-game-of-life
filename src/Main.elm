@@ -4,6 +4,13 @@ module Main exposing (main)
 import Array exposing (Array)
 import Browser
 import Html exposing (Html)
+import Time
+
+------------------------------------------------------------------------------
+-- Configuration
+------------------------------------------------------------------------------
+
+tickInterval = 1000
 
 ------------------------------------------------------------------------------
 -- Model
@@ -46,7 +53,9 @@ type Msg = Tick | Nil
 {-| DOCS MISSING -}
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Debug.todo "subscriptions()"
+    Sub.batch
+        [ Time.every tickInterval (\_ -> Tick)
+        ]
 
 {-| Wrap coordinates around the field -}
 wrap : Model -> Coord -> Coord
