@@ -27,12 +27,21 @@ initModel : Model
 initModel =
     Debug.todo "initModel()"  -- randomize
 
+{-| DOCS MISSING -}
+get : Model -> Coord -> Maybe CellState
+get model (col, row) =
+    case Array.get col model.vals of
+        Just colVals ->
+            Array.get row colVals
+        _ ->
+            Nothing
+
 ------------------------------------------------------------------------------
 -- Controller
 ------------------------------------------------------------------------------
 
 {-| DOCS MISSING -}
-type Msg = Nil
+type Msg = Tick | Nil
 
 {-| DOCS MISSING -}
 subscriptions : Model -> Sub Msg
@@ -65,26 +74,40 @@ neighbors : Model -> Coord -> Array CellState
 neighbors model (col, row) =
     Debug.todo "neighbors()"
 
-{-| Calculate the number of living neighbors to a cell -}
-liveNeighbors : Model -> Coord -> Int
-liveNeighbors model coord =
+{-| Determine the state of a cell for the next cycle -}
+nextState : Model -> Coord -> Result String CellState
+nextState model coord =
     let
         accumulator cellState sum =
             case cellState of
                 Live -> sum + 1
                 Dead -> sum
     in
-        Array.foldr accumulator 0 (neighbors model coord)
-
-{-| Determine the next state of a cell based upon its neighbors -}
-nextState : CellState -> Array CellState -> CellState
-nextState curState neighborList =
-    Debug.todo "nextState()"
+        let
+            liveNeighbors = Array.foldr accumulator 0 (neighbors model coord)
+        in
+            case (get model coord) of
+                Just Live ->
+                    if liveNeighbors < 2 || liveNeighbors > 3 then
+                        Ok Dead
+                    else
+                        Ok Live
+                Just Dead ->
+                    if liveNeighbors == 3 then
+                        Ok Live
+                    else
+                        Ok Dead
+                _ ->
+                    Err "Coordinate out of bounds"
 
 {-| DOCS MISSING -}
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
-    Debug.todo "update()"
+    case msg of
+        Tick ->
+            Debug.todo "Tick message"
+        _ ->
+            (model, Cmd.none)
 
 ------------------------------------------------------------------------------
 -- View
