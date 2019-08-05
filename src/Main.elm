@@ -81,7 +81,17 @@ wrap model (rawCol, rawRow) =
 {-| Get the neighbors of a cell -}
 neighbors : Model -> Coord -> Array CellState
 neighbors model (col, row) =
-    Debug.todo "neighbors()"
+    let
+        offsets =
+            [ (-1, -1), (0, -1), (1, -1), (-1, 0)
+            , (1, 0), (-1, 1), (0, 1), (1, 1)
+            ]
+        fxn (c, r) =
+            case get model (wrap model (col + c, row + r)) of
+                Just cellState -> cellState
+                _ -> Dead
+    in
+        Array.map fxn (Array.fromList offsets)
 
 {-| Determine the state of a cell for the next cycle -}
 nextState : Model -> Coord -> Result String CellState
