@@ -49,7 +49,22 @@ type alias Model =
 {-| DOCS MISSING -}
 initModel : Model
 initModel =
-    Debug.todo "initModel()"  -- randomize
+    let
+        deadCell cIndex rIndex =
+            { state = Dead
+            , coord = (cIndex, rIndex)
+            }
+        stateArray =
+            Array.repeat fieldCols (Array.repeat fieldRows Dead)
+        dataRow cIndex column =
+            Array.indexedMap (\rIndex _ -> deadCell cIndex rIndex) column
+        dataArray =
+            Array.indexedMap (\i c -> dataRow i c) stateArray
+    in
+        { cols = fieldCols
+        , rows = fieldRows
+        , vals = dataArray
+        }
 
 {-| DOCS MISSING -}
 get : Model -> Coord -> Maybe CellData
