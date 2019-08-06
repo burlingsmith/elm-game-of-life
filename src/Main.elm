@@ -18,22 +18,22 @@ import Time
 -- Configuration
 ------------------------------------------------------------------------------
 
-{-| DOCS MISSING -}
+{-| Number of columns in the simulation grid -}
 fieldCols = 30
 
-{-| DOCS MISSING -}
+{-| Number of rows in the simulation grid -}
 fieldRows = 30
 
-{-| DOCS MISSING -}
+{-| Side length of each cell in the simulation grid -}
 sideLen = "15px"
 
-{-| DOCS MISSING -}
+{-| Probability for live cells in randomly-generated grids -}
 liveP = 20
 
-{-| DOCS MISSING -}
+{-| Probability for dead cells in randomly-generated grids -}
 deadP = 80
 
-{-| DOCS MISSING -}
+{-| Number of milliseconds between simulation grid updates -}
 tickInterval = 125
 
 ------------------------------------------------------------------------------
@@ -47,19 +47,19 @@ type alias Coord = (Int, Int)
 -- Model
 ------------------------------------------------------------------------------
 
-{-| DOCS MISSING -}
+{-| Cell state -}
 type CellState = Dead | Live
 
-{-| DOCS MISSING -}
+{-| Cell state and position -}
 type alias CellData =
     { state : CellState
     , coord : Coord
     }
 
-{-| DOCS MISSING -}
+{-| Finite, two-dimensional grid of cells -}
 type alias CellGrid = Array (Array CellData)
 
-{-| DOCS MISSING -}
+{-| Simulation grid and metadata -}
 type alias Model =
     { cols : Int
     , rows : Int
@@ -68,7 +68,7 @@ type alias Model =
 
 ---- Instantiation -------------------
 
-{-| DOCS MISSING -}
+{-| Initial model -}
 initModel : Model
 initModel =
     let
@@ -84,14 +84,14 @@ initModel =
         , vals = indexed
         }
 
-{-| DOCS MISSING -}
+{-| CellData constructor -}
 cell : Int -> Int -> CellState -> CellData
 cell col row state =
     { coord = (col, row)
     , state = state
     }
 
-{-| DOCS MISSING -}
+{-| Intermediate step between randomly generated cells and a CellGrid -}
 gridFromSeed : List CellState -> CellGrid
 gridFromSeed ls =
     let
@@ -113,7 +113,7 @@ gridFromSeed ls =
 
 ---- Random Generation ---------------
 
-{-| DOCS MISSING -}
+{-| Random generator for a new simulation grid's CellState values -}
 seedGen : Generator (List CellState)
 seedGen =
     let
@@ -124,7 +124,7 @@ seedGen =
 
 ---- Value Retrieval -----------------
 
-{-| DOCS MISSING -}
+{-| Get the CellData at a given coordinate -}
 get : Model -> Coord -> Maybe CellData
 get model (col, row) =
     case Array.get col model.vals of
@@ -133,7 +133,7 @@ get model (col, row) =
         _ ->
             Nothing
 
-{-| DOCS MISSING -}
+{-| Get the CellState of the CellData at a given coordinate -}
 getState : Model -> Coord -> Maybe CellState
 getState model coord =
     case get model coord of
@@ -142,7 +142,7 @@ getState model coord =
 
 ---- Boolean Analysis ----------------
 
-{-| DOCS MISSING -}
+{-| Check if the simulation grid contains no Live cells -}
 isDead : Model -> Bool
 isDead model =
     let
@@ -159,7 +159,7 @@ isDead model =
 -- Update
 ------------------------------------------------------------------------------
 
-{-| DOCS MISSING -}
+{-| Controller messages -}
 type Msg
     = NewSim (List CellState)
     | Reset
@@ -231,7 +231,7 @@ nextState model coord =
 
 ---- Controller ----------------------
 
-{-| DOCS MISSING -}
+{-| Update the model based upon controller messages -}
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
     case msg of
@@ -265,7 +265,7 @@ update msg model =
 -- Subscriptions
 ------------------------------------------------------------------------------
 
-{-| DOCS MISSING -}
+{-| Subscribe to message-generating events -}
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
@@ -273,7 +273,7 @@ subscriptions model =
         , Time.every tickInterval (\_ -> Tick)
         ]
 
-{-| DOCS MISSING -}
+{-| Process keyboard inputs -}
 keyDecoder : Model -> Decoder Msg
 keyDecoder model =
     let
@@ -289,7 +289,7 @@ keyDecoder model =
 -- View
 ------------------------------------------------------------------------------
 
-{-| DOCS MISSING -}
+{-| Construct the page header's HTML -}
 viewHeader : Html msg
 viewHeader =
     let
@@ -311,7 +311,7 @@ viewHeader =
                 [ Html.text "Conway's Game of Life" ]
             ]
 
-{-| DOCS MISSING -}
+{-| Construct the simulation region's HTML -}
 viewSimRegion : Model -> Html msg
 viewSimRegion model =
     let
@@ -328,7 +328,7 @@ viewSimRegion model =
             , viewInfoPane model
             ]
 
-{-| DOCS MISSING -}
+{-| Construct the simulation grid's HTML -}
 viewSimGrid : Model -> Html msg
 viewSimGrid model =
     let
@@ -346,7 +346,7 @@ viewSimGrid model =
     in
         Html.div attributes (grid fieldCols)
 
-{-| DOCS MISSING -}
+{-| Construct the HTML for a single column in the simulation grid -}
 viewColumn : Model -> Int -> Html msg
 viewColumn model cInd =
     let
@@ -362,7 +362,7 @@ viewColumn model cInd =
     in
         Html.div attributes (column fieldRows)
 
-{-| DOCS MISSING -}
+{-| Construct a cell's HTML -}
 viewCell : Model -> Coord -> Html msg
 viewCell model (col, row) =
     let
@@ -389,7 +389,7 @@ viewCell model (col, row) =
         Html.div (state::color::attributes)
             []
 
-{-| DOCS MISSING -}
+{-| Construct a live cell's HTML -}
 viewLiveCell : Html msg
 viewLiveCell =
     let
@@ -400,7 +400,7 @@ viewLiveCell =
         Html.div attributes
             []
 
-{-| DOCS MISSING -}
+{-| Construct a dead cell's HTML -}
 viewDeadCell : Html msg
 viewDeadCell =
     let
@@ -411,7 +411,7 @@ viewDeadCell =
         Html.div attributes
             []
 
-{-| DOCS MISSING -}
+{-| Construct the info pane HTML -}
 viewInfoPane : Model -> Html msg
 viewInfoPane model =
     let
@@ -426,7 +426,7 @@ viewInfoPane model =
         Html.div attributes
             [ Html.text "Press 'SPACE' to generate a new grid" ]
 
-{-| DOCS MISSING -}
+{-| Construct the footer HTML -}
 viewFooter : Html msg
 viewFooter =
     let
@@ -447,7 +447,7 @@ viewFooter =
         Html.div attributes
             [ Html.text "Conway's Game of Life, written in Elm - © 2019" ]
 
-{-| DOCS MISSING -}
+{-| Construct the application's HTML -}
 view : Model -> Html msg
 view model =
     let
@@ -475,10 +475,10 @@ view model =
 -- Entry Point
 ------------------------------------------------------------------------------
 
-{-| DOCS MISSING -}
+{-| Configuration flags -}
 type alias Flags = ()
 
-{-| DOCS MISSING -}
+{-| Initialize the app -}
 init : Flags -> (Model, Cmd Msg)
 init () =
     (initModel, Cmd.none)
