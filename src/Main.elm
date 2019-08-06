@@ -3,12 +3,14 @@ module Main exposing (main)
 
 import Array exposing (Array)
 import Browser
+import Browser.Events
 import Css
 import Css.Global
 import Html exposing (Html, Attribute)
 import Html.Attributes
 import Html.Styled
 import Html.Styled.Attributes as Style
+import Json.Decode as Decode exposing (Decoder)
 import Random exposing (Generator)
 import Time
 
@@ -17,13 +19,13 @@ import Time
 ------------------------------------------------------------------------------
 
 {-| DOCS MISSING -}
-fieldCols = 46
+fieldCols = 30
 
 {-| DOCS MISSING -}
-fieldRows = 50
+fieldRows = 30
 
 {-| DOCS MISSING -}
-sideLen = "10px"
+sideLen = "15px"
 
 {-| DOCS MISSING -}
 liveP = 20
@@ -160,6 +162,7 @@ isDead model =
 {-| DOCS MISSING -}
 type Msg
     = NewSim (List CellState)
+    | Reset
     | Tick
     | Nil
 
@@ -232,6 +235,13 @@ nextState model coord =
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
     case msg of
+        NewSim seed ->
+            let
+                newModel = { model | vals = gridFromSeed seed }
+            in
+                (newModel, Cmd.none)
+        Reset ->
+            (model, Random.generate NewSim seedGen)
         Tick ->
             if isDead model then
                 let
@@ -248,11 +258,6 @@ update msg model =
                         { model | vals = Array.map (Array.map fxn) model.vals }
                 in
                     (newModel, Cmd.none)
-        NewSim seed ->
-            let
-                newModel = { model | vals = gridFromSeed seed }
-            in
-                (newModel, Cmd.none)
         _ ->
             (model, Cmd.none)
 
@@ -264,8 +269,21 @@ update msg model =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
-        [ Time.every tickInterval (\_ -> Tick)
+        [ Browser.Events.onKeyDown (keyDecoder model)
+        , Time.every tickInterval (\_ -> Tick)
         ]
+
+{-| DOCS MISSING -}
+keyDecoder : Model -> Decoder Msg
+keyDecoder model =
+    let
+        decoder key =
+            if (key == " ") then
+                Reset
+            else
+                Nil
+    in
+        Decode.map decoder (Decode.field "key" Decode.string)
 
 ------------------------------------------------------------------------------
 -- View
@@ -299,10 +317,10 @@ viewSimRegion model =
     let
         attributes =
             [ Html.Attributes.class "sim-region"
-            , Html.Attributes.style "border" "solid black"
             , Html.Attributes.style "margin" "auto"
-            , Html.Attributes.style "margin-top" "107px"
-            , Html.Attributes.style "width" "598px"
+            , Html.Attributes.style "margin-top" "80px"
+            , Html.Attributes.style "margin-bottom" "50px"
+            , Html.Attributes.style "width" "fit-content"
             ]
     in
         Html.div attributes
@@ -322,6 +340,7 @@ viewSimGrid model =
         attributes =
             [ Html.Attributes.class "sim-grid"
             , Html.Attributes.style "margin" "auto"
+            , Html.Attributes.style "border" "1px solid black"
             , Html.Attributes.style "line-height" "0px"
             ]
     in
@@ -362,7 +381,7 @@ viewCell model (col, row) =
         attributes =
             [ Html.Attributes.class "cell"
             , Html.Attributes.class ("row-" ++ (String.fromInt row))
-            , Html.Attributes.style "border" "solid black"
+            , Html.Attributes.style "border" "1px solid black"
             , Html.Attributes.style "height" sideLen
             , Html.Attributes.style "width" sideLen
             ]
@@ -398,10 +417,14 @@ viewInfoPane model =
     let
         attributes =
             [ Html.Attributes.class "info-pane"
+            , Html.Attributes.style "text-align" "center"
+            , Html.Attributes.style "margin" "auto"
+            , Html.Attributes.style "margin-top" "25px"
+            , Html.Attributes.style "font-weight" "bold"
             ]
     in
         Html.div attributes
-            []
+            [ Html.text "Press 'SPACE' to generate a new grid" ]
 
 {-| DOCS MISSING -}
 viewFooter : Html msg
