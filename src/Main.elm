@@ -265,14 +265,6 @@ update msg model =
 -- Subscriptions
 ------------------------------------------------------------------------------
 
-{-| Subscribe to message-generating events -}
-subscriptions : Model -> Sub Msg
-subscriptions model =
-    Sub.batch
-        [ Browser.Events.onKeyDown (keyDecoder model)
-        , Time.every tickInterval (\_ -> Tick)
-        ]
-
 {-| Process keyboard inputs -}
 keyDecoder : Model -> Decoder Msg
 keyDecoder model =
@@ -284,6 +276,14 @@ keyDecoder model =
                 Nil
     in
         Decode.map decoder (Decode.field "key" Decode.string)
+
+{-| Subscribe to message-generating events -}
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Sub.batch
+        [ Browser.Events.onKeyDown (keyDecoder model)
+        , Time.every tickInterval (\_ -> Tick)
+        ]
 
 ------------------------------------------------------------------------------
 -- View
