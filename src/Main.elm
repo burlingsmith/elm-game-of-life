@@ -254,8 +254,10 @@ update msg model =
                         case nextState model cellData.coord of
                             Ok newState -> { cellData | state = newState }
                             _ -> cellData
+                    newVals =
+                        Array.map (Array.map fxn) model.vals
                     newModel =
-                        { model | vals = Array.map (Array.map fxn) model.vals }
+                        { model | vals = newVals }
                 in
                     (newModel, Cmd.none)
         _ ->
