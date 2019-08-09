@@ -6547,14 +6547,13 @@ var author$project$Main$update = F2(
 							return cellData;
 						}
 					};
+					var newVals = A2(
+						elm$core$Array$map,
+						elm$core$Array$map(fxn),
+						model.vals);
 					var newModel = _Utils_update(
 						model,
-						{
-							vals: A2(
-								elm$core$Array$map,
-								elm$core$Array$map(fxn),
-								model.vals)
-						});
+						{vals: newVals});
 					return _Utils_Tuple2(newModel, elm$core$Platform$Cmd$none);
 				}
 			default:
